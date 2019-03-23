@@ -7,5 +7,5 @@
  */
 
 return [
-    'fileName' => 'C:\Users\Chewbacca\PhpstormProjects\Moto_catalogs\data.csv'
+    'fileName' => 'C:\Users\Chewbacca\Documents\GitHub\Moto_amk_center\data.csv'
 ];

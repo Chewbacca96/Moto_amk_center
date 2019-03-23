@@ -10,21 +10,38 @@ namespace Moto_catalogs\models;
 
 class Model
 {
-    const SITE = 'http://amk-center.ru/motozapchasti';
+    const SITE = 'http://amk-center.ru/ajax/getfilteroptions';
 
-    public function getFromUrl($yearCode, $markCode, $capacityCode)
+    public function postRequest($yearID, $markID, $capacityID)
     {
-        $html = file_get_html(self::SITE.'/?qs=1&cat=260&type=1&y%5B%5D='.$yearCode.'&fmark%5B%5D='.$markCode.'&c%5B%5D='.$capacityCode);
-        $html = $html->find('select[id="filterModel"]', 0)->find('option');
+        $postData = http_build_query([
+            'qs'      => '1',
+            'cat'     => '260',
+            'type'    => '1',
+            'y[]'     => $yearID,
+            'fmark[]' => $markID,
+            'c[]'     => $capacityID
+        ]);
 
-        $i = 0;
-        foreach ($html as $model) {
-            $models[$i]['code']  = $model->value;
-            $models[$i]['value'] = $model->innertext;
+        $options = [
+            'http' => [
+                'method'  => 'POST',
+                'header'  => 'X-Requested-With: XMLHttpRequest'."\r\n".
+                             'Content-Type: application/x-www-form-urlencoded',
+                'content' => $postData
+            ]
+        ];
 
-            $i++;
-        }
+        $context = stream_context_create($options);
 
-        return $models;
+        $response = file_get_contents(self::SITE, false, $context);
+        return json_decode($response, true);
+    }
+
+    public function getFromUrl($yearID, $markID, $capacityID)
+    {
+        $response = self::postRequest($yearID, $markID, $capacityID);
+
+        return $response['models'];
     }
 }

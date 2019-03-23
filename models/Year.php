@@ -19,8 +19,8 @@ class Year
 
         $i = 0;
         foreach ($html as $year) {
-            $years[$i]['code']  = $year->value;
-            $years[$i]['value'] = $year->innertext;
+            $years[$i]['id']  = $year->value;
+            $years[$i]['name'] = $year->innertext;
 
             $i++;
         }

@@ -10,21 +10,37 @@ namespace Moto_catalogs\models;
 
 class Capacity
 {
-    const SITE = 'http://amk-center.ru/motozapchasti';
+    const SITE = 'http://amk-center.ru/ajax/getfilteroptions';
 
-    public function getFromUrl($yearCode, $markCode)
+    public function postRequest($yearID, $markID)
     {
-        $html = file_get_html(self::SITE.'/?qs=1&cat=260&type=1&y%5B%5D='.$yearCode.'&fmark%5B%5D='.$markCode);
-        $html = $html->find('select[id="filterCapacity"]', 0)->find('option');
+        $postData = http_build_query([
+            'qs'      => '1',
+            'cat'     => '260',
+            'type'    => '1',
+            'y[]'     => $yearID,
+            'fmark[]' => $markID
+        ]);
 
-        $i = 0;
-        foreach ($html as $capacity) {
-            $capacities[$i]['code']  = $capacity->value;
-            $capacities[$i]['value'] = $capacity->innertext;
+        $options = [
+            'http' => [
+                'method'  => 'POST',
+                'header'  => 'X-Requested-With: XMLHttpRequest'."\r\n".
+                             'Content-Type: application/x-www-form-urlencoded',
+                'content' => $postData
+            ]
+        ];
 
-            $i++;
-        }
+        $context = stream_context_create($options);
 
-        return $capacities;
+        $response = file_get_contents(self::SITE, false, $context);
+        return json_decode($response, true);
+    }
+
+    public function getFromUrl($yearID, $markID)
+    {
+        $response = self::postRequest($yearID, $markID);
+
+        return $response['capacities'];
     }
 }

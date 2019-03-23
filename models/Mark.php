@@ -10,21 +10,36 @@ namespace Moto_catalogs\models;
 
 class Mark
 {
-    const SITE = 'http://amk-center.ru/motozapchasti';
+    const SITE = 'http://amk-center.ru/ajax/getfilteroptions';
 
-    public function getFromUrl($yearCode)
+    public function postRequest($yearID)
     {
-        $html = file_get_html(self::SITE.'/?qs=1&cat=260&type=1&y%5B%5D='.$yearCode);
-        $html = $html->find('select[id="filterMark"]', 0)->find('option');
+        $postData = http_build_query([
+            'qs'   => '1',
+            'cat'  => '260',
+            'type' => '1',
+            'y[]'  => $yearID
+        ]);
 
-        $i = 0;
-        foreach ($html as $mark) {
-            $marks[$i]['code']  = $mark->value;
-            $marks[$i]['value'] = $mark->innertext;
+        $options = [
+            'http' => [
+                'method'  => 'POST',
+                'header'  => 'X-Requested-With: XMLHttpRequest'."\r\n".
+                             'Content-Type: application/x-www-form-urlencoded',
+                'content' => $postData
+            ]
+        ];
 
-            $i++;
-        }
+        $context = stream_context_create($options);
 
-        return $marks;
+        $response = file_get_contents(self::SITE, false, $context);
+        return json_decode($response, true);
+    }
+
+    public function getFromUrl($yearID)
+    {
+        $response = self::postRequest($yearID);
+
+        return $response['marks'];
     }
 }
